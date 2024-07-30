@@ -28,7 +28,7 @@
 	const itemWidth = 125;
 	const itemsGap = 20;
 	const startOffset = -20;
-	const animationDuration = 15000;
+	const animationDuration = dev ? 3000 : 15000;
 	const totalDummyItems = 40;
 	const itemsInView = 5;
 

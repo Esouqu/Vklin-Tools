@@ -1,19 +1,13 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import {
-		BoxGeometry,
 		BufferGeometry,
 		Color,
 		DirectionalLight,
-		DodecahedronGeometry,
-		IcosahedronGeometry,
-		Material,
 		Mesh,
 		MeshPhongMaterial,
-		OctahedronGeometry,
 		PerspectiveCamera,
 		Scene,
-		TetrahedronGeometry,
 		WebGLRenderer
 	} from 'three';
 	import { OrbitControls } from 'three/addons/controls/OrbitControls.js';

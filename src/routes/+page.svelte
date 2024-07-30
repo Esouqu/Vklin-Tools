@@ -62,6 +62,7 @@
 			<h2 style="color: white;">Диапазон</h2>
 			<ButtonSelect
 				options={RARITIES}
+				color={RARITIES[selectedRarity].color}
 				isDisabled={isRollingItems || isRollingKeys}
 				bind:currentOption={selectedRarity}
 			/>
@@ -113,13 +114,13 @@
 		{#if winnerKeys}
 			<Card>
 				<div class="keys-card">
-					<div class="keys-card-image" style="background-image: url({winnerKeys.image});"></div>
 					<div style="display: flex; align-items: center;">
 						<h2>
 							{winnerKeys.name}
 							{keysNoun}
 						</h2>
 					</div>
+					<div class="keys-card-image" style="background-image: url({winnerKeys.image});"></div>
 				</div>
 			</Card>
 		{/if}
@@ -129,6 +130,7 @@
 <style lang="scss">
 	.keys-card {
 		display: flex;
+		justify-content: space-between;
 		gap: 20px;
 
 		&-image {

@@ -1,4 +1,9 @@
 :root {
+  --rarity-green: #45CB85;
+  --rarity-blue: #35A7FF;
+  --rarity-purple: #CA3CFF;
+  --rarity-yellow: #F6AE2D;
+
   --surface-dim: #141313;
   --surface-bright: #3A3939;
   --surface-container: #201F1F;
