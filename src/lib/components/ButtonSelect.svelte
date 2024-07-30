@@ -9,10 +9,11 @@
 	interface Props {
 		options: T[];
 		currentOption: number;
+		isDisabled?: boolean;
 		onOptionChange?: ((optionValue: number) => void) | null;
 	}
 
-	let { options = [], currentOption = $bindable(0), onOptionChange }: Props = $props();
+	let { options = [], currentOption = $bindable(0), isDisabled, onOptionChange }: Props = $props();
 
 	function setOption(optionValue: number) {
 		currentOption = optionValue;
@@ -21,7 +22,7 @@
 	}
 </script>
 
-<div class="button-select">
+<div class="button-select" class:disabled={isDisabled}>
 	{#each options as option, idx}
 		<button
 			type="button"
@@ -40,6 +41,11 @@
 		padding: 5px;
 		color: white;
 		// background-color: var(--surface-container);
+
+		&.disabled {
+			pointer-events: none;
+			opacity: 0.3;
+		}
 
 		button {
 			position: relative;

@@ -23,6 +23,8 @@
 	let selectedDiceIdx = $state(1);
 	let selectedDice = $derived(DICES[selectedDiceIdx]);
 	let selectedRarity = $state(0);
+	let isRollingItems = $state(false);
+	let isRollingKeys = $state(false);
 	let transformedItems: IItem[] = $derived.by(mapItems);
 	let transformedKeys: IKeysRange[] = $derived.by(transformKeys);
 	let winnerItem: IItem | undefined = $state();
@@ -58,7 +60,11 @@
 			style="flex-direction: row; align-items: center; justify-content: space-between;"
 		>
 			<h2 style="color: white;">Диапазон</h2>
-			<ButtonSelect options={RARITIES} bind:currentOption={selectedRarity} />
+			<ButtonSelect
+				options={RARITIES}
+				isDisabled={isRollingItems || isRollingKeys}
+				bind:currentOption={selectedRarity}
+			/>
 		</div>
 		<div class="section-wrapper" style="width: 100%;">
 			<div style="display: flex; align-items: center; justify-content: space-between;">
@@ -74,8 +80,14 @@
 			<Roulette
 				items={transformedItems}
 				dropSoundFile={itemDropSoundFile}
-				onStart={() => (winnerItem = undefined)}
-				onFinished={(item) => (winnerItem = item)}
+				onStart={() => {
+					isRollingItems = true;
+					winnerItem = undefined;
+				}}
+				onFinished={(item) => {
+					isRollingItems = false;
+					winnerItem = item;
+				}}
 			/>
 		</div>
 		<div class="section-wrapper">
@@ -83,8 +95,14 @@
 			<Roulette
 				items={transformedKeys}
 				dropSoundFile={keysDropSoundFile}
-				onStart={() => (winnerKeys = undefined)}
-				onFinished={(item) => (winnerKeys = item)}
+				onStart={() => {
+					isRollingKeys = true;
+					winnerKeys = undefined;
+				}}
+				onFinished={(item) => {
+					isRollingKeys = false;
+					winnerKeys = item;
+				}}
 			/>
 		</div>
 	</div>
