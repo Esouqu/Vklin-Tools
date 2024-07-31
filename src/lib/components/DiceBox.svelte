@@ -17,20 +17,20 @@
 
 	interface Props {
 		value: number;
-		geometry: BufferGeometry;
+		diceGeometry: BufferGeometry;
 		color: string;
+		onRollStart?: () => void;
+		onRollEnd?: () => void;
 	}
 
-	const { value, geometry, color }: Props = $props();
+	const { value, diceGeometry, color, onRollStart, onRollEnd }: Props = $props();
 
 	let webGl: HTMLCanvasElement | undefined = $state();
 	let isRolling = $state(false);
-	let resultN = $state(0);
+	let rolledResult = $state(0);
 	let width = 200;
 	let height = 200;
 	let aspectRatio = $derived(width / height);
-
-	let rollSound: HTMLAudioElement;
 
 	let camera: PerspectiveCamera;
 	let renderer: WebGLRenderer;
@@ -39,19 +39,30 @@
 	let controls: OrbitControls;
 	let mainLight: DirectionalLight;
 
+	let rollSound: HTMLAudioElement;
+	let throwAnimationId: number;
+	let inflateAnimationId: number;
+
 	onMount(() => {
 		rollSound = loadAudio(diceRollFile);
-		setCanvas();
-		animate();
+		setupCanvas();
+		animateControls();
+
+		return () => {
+			renderer.dispose();
+			camera.remove();
+			scene.clear();
+			controls.dispose();
+			mainLight.dispose();
+		};
 	});
 
 	$effect(() => {
-		if (geometry) {
-			mesh.geometry = geometry;
-			geometry.rotateX(60);
-			geometry.rotateZ(45);
-			resultN = 0;
-			animateMesh();
+		if (diceGeometry) {
+			rolledResult = 0;
+
+			setMeshGeometry(diceGeometry);
+			inflateMesh();
 		}
 	});
 
@@ -60,18 +71,6 @@
 			updateCamera();
 			updateRenderer();
 		}
-
-		return () => {
-			if (renderer) {
-				renderer.dispose();
-			}
-			if (camera) {
-				camera.remove();
-			}
-			if (scene) {
-				scene.clear();
-			}
-		};
 	});
 
 	$effect(() => {
@@ -82,70 +81,78 @@
 		}
 	});
 
-	function setCanvas() {
+	function setupCanvas() {
 		if (!webGl) return;
 
 		scene = new Scene();
-		mainLight = new DirectionalLight('white', 2);
-		mainLight.position.z = 15;
 
-		geometry.rotateX(60);
-		geometry.rotateZ(45);
+		mesh = createMesh();
+		mainLight = createLight();
+		camera = createCamera();
+		camera.add(mainLight);
+		camera.lookAt(mesh.position);
 
-		mesh = new Mesh(
-			geometry,
+		scene.add(mesh);
+		scene.add(camera);
+
+		renderer = createRenderer(webGl);
+		controls = createControls(webGl);
+
+		inflateMesh();
+	}
+
+	function createControls(canvas: HTMLCanvasElement) {
+		const controlsInstance = new OrbitControls(camera, canvas);
+		controlsInstance.enablePan = false;
+		controlsInstance.enableDamping = false;
+		controlsInstance.enableZoom = false;
+
+		return controlsInstance;
+	}
+
+	function createRenderer(canvas: HTMLCanvasElement) {
+		const rendererInstance = new WebGLRenderer({ canvas, antialias: true, alpha: true });
+		rendererInstance.setClearColor(0x000000, 0);
+		rendererInstance.setSize(width, height);
+		rendererInstance.render(scene, camera);
+
+		return rendererInstance;
+	}
+
+	function createLight() {
+		const lightInstance = new DirectionalLight('white', 2);
+		lightInstance.position.z = 15;
+
+		return lightInstance;
+	}
+
+	function setMeshGeometry(geometry: BufferGeometry) {
+		mesh.geometry = geometry;
+		mesh.geometry.rotateX(60);
+		mesh.geometry.rotateZ(45);
+	}
+
+	function createMesh() {
+		const meshInstance = new Mesh(
+			diceGeometry,
 			new MeshPhongMaterial({
 				color: new Color(color)
 			})
 		);
 
-		scene.add(mesh);
-		animateMesh();
+		return meshInstance;
+	}
 
-		camera = new PerspectiveCamera(45, aspectRatio, 0.1, 100);
-		camera.position.z = 3; // camera zoom
-		camera.add(mainLight);
-		scene.add(camera);
+	function createCamera() {
+		const cameraInstance = new PerspectiveCamera(45, aspectRatio, 0.1, 100);
+		cameraInstance.position.z = 3; // camera zoom
 
-		const canvas = webGl;
-		renderer = new WebGLRenderer({ canvas, antialias: true, alpha: true });
-		renderer.setClearColor(0x000000, 0);
-		renderer.setSize(width, height);
-		renderer.render(scene, camera);
-
-		controls = new OrbitControls(camera, canvas);
-		controls.enablePan = false;
-		controls.enableDamping = false;
-		controls.enableZoom = false;
-
-		camera.lookAt(mesh.position);
+		return cameraInstance;
 	}
 
 	function updateCamera() {
 		camera.aspect = aspectRatio;
 		camera.updateProjectionMatrix();
-	}
-
-	function animateMesh() {
-		let animationFrameId = requestAnimationFrame(() => animateAppearance());
-		mesh.scale.set(0, 0, 0);
-
-		function animateAppearance() {
-			const speed = 0.1; // Adjust this value to control the animation speed
-
-			const scaleX = Math.min(1, mesh.scale.x + speed);
-			const scaleY = Math.min(1, mesh.scale.y + speed);
-			const scaleZ = Math.min(1, mesh.scale.z + speed);
-
-			mesh.scale.set(scaleX, scaleY, scaleZ);
-
-			if (mesh.scale.x >= 1) {
-				cancelAnimationFrame(animationFrameId);
-				return;
-			}
-
-			animationFrameId = requestAnimationFrame(animateAppearance);
-		}
 	}
 
 	function updateRenderer() {
@@ -154,40 +161,64 @@
 		renderer.setPixelRatio(window.devicePixelRatio);
 	}
 
-	function animate() {
+	function animateControls() {
 		controls.update();
 		renderer.render(scene, camera);
-		requestAnimationFrame(animate);
+		requestAnimationFrame(animateControls);
+	}
+
+	function animateAppearance() {
+		const speed = 0.1; // Adjust this value to control the animation speed
+
+		const scaleX = Math.min(1, mesh.scale.x + speed);
+		const scaleY = Math.min(1, mesh.scale.y + speed);
+		const scaleZ = Math.min(1, mesh.scale.z + speed);
+
+		mesh.scale.set(scaleX, scaleY, scaleZ);
+
+		if (mesh.scale.x >= 1) {
+			cancelAnimationFrame(inflateAnimationId);
+			return;
+		}
+
+		inflateAnimationId = requestAnimationFrame(animateAppearance);
+	}
+
+	function inflateMesh() {
+		mesh.scale.set(0, 0, 0);
+		inflateAnimationId = requestAnimationFrame(() => animateAppearance());
+	}
+
+	function animateThrow() {
+		const time = Date.now() * 0.01;
+		const rotationSpeed = 3 * (1 + Math.sin(time));
+
+		mesh.rotation.y = rotationSpeed;
+		mesh.rotation.z = rotationSpeed;
+
+		if (!isRolling) {
+			cancelAnimationFrame(throwAnimationId);
+			return;
+		}
+
+		throwAnimationId = requestAnimationFrame(animateThrow);
 	}
 
 	function throwDice() {
 		if (isRolling) return;
 
-		let animationFrameId = requestAnimationFrame(() => animateThrow());
-
 		playSound(rollSound, 0.2);
 		isRolling = true;
+		onRollStart?.();
 
-		function animateThrow() {
-			const time = Date.now() * 0.01;
-			const rotationSpeed = 3 * (1 + Math.sin(time));
-
-			mesh.rotation.y = rotationSpeed;
-			mesh.rotation.z = rotationSpeed;
-
-			if (!isRolling) {
-				cancelAnimationFrame(animationFrameId);
-				return;
-			}
-
-			animationFrameId = requestAnimationFrame(animateThrow);
-		}
+		throwAnimationId = requestAnimationFrame(() => animateThrow());
 
 		setTimeout(() => {
-			cancelAnimationFrame(animationFrameId);
+			cancelAnimationFrame(throwAnimationId);
+
 			isRolling = false;
-			const result = randInt(1, value);
-			resultN = result;
+			rolledResult = randInt(1, value);
+			onRollEnd?.();
 		}, 700);
 	}
 </script>
@@ -201,9 +232,9 @@
 />
 
 <div class="dice-box">
-	{#if resultN && !isRolling}
+	{#if rolledResult && !isRolling}
 		<div class="dice-box-result">
-			{resultN}
+			{rolledResult}
 		</div>
 	{/if}
 	<canvas bind:this={webGl} {width} {height} onmouseup={throwDice}></canvas>

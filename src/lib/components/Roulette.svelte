@@ -37,7 +37,7 @@
 	let dropSound: HTMLAudioElement;
 
 	let winnerItem: T | undefined = $state();
-	let dummyItems: RouletteItem[] = $state(generateItems(totalDummyItems, randomFromArray(items)));
+	let dummyItems: RouletteItem[] = $state(getRouletteItems());
 	let isAnimating = $state(false);
 
 	let itemElements: HTMLDivElement[] = $state([]);
@@ -49,13 +49,27 @@
 		openSound = loadAudio(openSoundFile);
 		rollSound = loadAudio(rollSoundFile);
 		dropSound = loadAudio(dropSoundFile);
+
+		animateDummyItemsUpdate();
 	});
 
 	$effect(() => {
 		if (items) {
-			dummyItems = generateItems(totalDummyItems, randomFromArray(items));
+			dummyItems = getRouletteItems();
+			animateDummyItemsUpdate();
 		}
 	});
+
+	function animateDummyItemsUpdate() {
+		if (!containerElement) return;
+
+		anime({
+			targets: containerElement,
+			translateX: [-1400, -startOffset],
+			duration: 700,
+			easing: 'cubicBezier(0, 0.84, 0.58, 1)'
+		});
+	}
 
 	function roll() {
 		const randomWinner = randomFromArray(items);
@@ -111,6 +125,10 @@
 		}
 
 		return false;
+	}
+
+	function getRouletteItems() {
+		return generateItems(totalDummyItems, randomFromArray(items));
 	}
 
 	function generateItems(amount: number, generatedWinner?: T) {

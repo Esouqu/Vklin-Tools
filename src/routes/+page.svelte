@@ -20,15 +20,16 @@
 		value: number;
 	}
 
+	let winnerItem: IItem | undefined = $state();
+	let winnerKeys: IKeysRange | undefined = $state();
 	let selectedDiceIdx = $state(1);
-	let selectedDice = $derived(DICES[selectedDiceIdx]);
 	let selectedRarity = $state(0);
 	let isRollingItems = $state(false);
 	let isRollingKeys = $state(false);
+	let isRollingDice = $state(false);
+	let selectedDice = $derived(DICES[selectedDiceIdx]);
 	let transformedItems: IItem[] = $derived.by(mapItems);
 	let transformedKeys: IKeysRange[] = $derived.by(transformKeys);
-	let winnerItem: IItem | undefined = $state();
-	let winnerKeys: IKeysRange | undefined = $state();
 	let keysNoun: string | undefined = $derived.by(getKeysNoun);
 
 	function getKeysNoun() {
@@ -70,10 +71,20 @@
 		<div class="section-wrapper" style="width: 100%;">
 			<div style="display: flex; align-items: center; justify-content: space-between;">
 				<h2 style="margin: 0; color: white;">Кубик</h2>
-				<ButtonSelect options={DICES} bind:currentOption={selectedDiceIdx} />
+				<ButtonSelect
+					options={DICES}
+					isDisabled={isRollingDice}
+					bind:currentOption={selectedDiceIdx}
+				/>
 			</div>
 			<div style="display: flex; justify-content: center; width: 100%;">
-				<DiceBox {...selectedDice} color={RARITIES[selectedRarity].color} />
+				<DiceBox
+					{...selectedDice}
+					diceGeometry={selectedDice.geometry}
+					color={RARITIES[selectedRarity].color}
+					onRollStart={() => (isRollingDice = true)}
+					onRollEnd={() => (isRollingDice = false)}
+				/>
 			</div>
 		</div>
 		<div class="section-wrapper">
