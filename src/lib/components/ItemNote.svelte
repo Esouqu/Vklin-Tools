@@ -44,6 +44,7 @@
 			font-style: italic;
 			opacity: 0.7;
 		}
+
 		&-effect {
 			margin: 0;
 			padding: 20px;
