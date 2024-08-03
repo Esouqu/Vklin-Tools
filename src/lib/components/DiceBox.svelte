@@ -8,12 +8,14 @@
 		MeshPhongMaterial,
 		PerspectiveCamera,
 		Scene,
+		Vector3,
 		WebGLRenderer
 	} from 'three';
 	import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 	import { randInt } from 'three/src/math/MathUtils.js';
 	import diceRollFile from '$lib/assets/sounds/dice_roll_sound.mp3';
 	import { loadAudio, playSound } from '$lib/utils';
+	import anime from 'animejs';
 
 	interface Props {
 		value: number;
@@ -27,15 +29,15 @@
 
 	let webGl: HTMLCanvasElement | undefined = $state();
 	let isRolling = $state(false);
-	let rolledResult = $state(0);
+	let rolledResult: number | undefined = $state(0);
 	let width = 200;
 	let height = 200;
 	let aspectRatio = $derived(width / height);
 
-	let camera: PerspectiveCamera;
+	let camera: PerspectiveCamera = new PerspectiveCamera();
 	let renderer: WebGLRenderer;
 	let scene: Scene;
-	let mesh: Mesh;
+	let mesh: Mesh<BufferGeometry, MeshPhongMaterial>;
 	let controls: OrbitControls;
 	let mainLight: DirectionalLight;
 
@@ -75,8 +77,15 @@
 
 	$effect(() => {
 		if (color && mesh.material) {
-			mesh.material = new MeshPhongMaterial({
-				color: new Color(color)
+			const nextColor = new Color(color);
+
+			anime({
+				targets: mesh.material.color,
+				r: nextColor.r,
+				g: nextColor.g,
+				b: nextColor.b,
+				duration: 500,
+				easing: 'easeInOutQuad'
 			});
 		}
 	});
@@ -104,8 +113,9 @@
 	function createControls(canvas: HTMLCanvasElement) {
 		const controlsInstance = new OrbitControls(camera, canvas);
 		controlsInstance.enablePan = false;
-		controlsInstance.enableDamping = false;
-		controlsInstance.enableZoom = false;
+		controlsInstance.enableDamping = true;
+		controlsInstance.dampingFactor = 0.03;
+		controlsInstance.rotateSpeed = 0.5;
 
 		return controlsInstance;
 	}
@@ -190,11 +200,11 @@
 	}
 
 	function animateThrow() {
-		const time = Date.now() * 0.01;
-		const rotationSpeed = 3 * (1 + Math.sin(time));
+		const xRotation = Math.random() * Math.PI * 2;
+		const yRotation = Math.random() * Math.PI * 2;
+		const zRotation = Math.random() * Math.PI * 2;
 
-		mesh.rotation.y = rotationSpeed;
-		mesh.rotation.z = rotationSpeed;
+		mesh.rotation.set(xRotation, yRotation, zRotation);
 
 		if (!isRolling) {
 			cancelAnimationFrame(throwAnimationId);
@@ -216,8 +226,19 @@
 		setTimeout(() => {
 			cancelAnimationFrame(throwAnimationId);
 
-			isRolling = false;
+			anime({
+				targets: mesh.rotation,
+				x: mesh.rotation.x + 0.25,
+				y: mesh.rotation.y + 0.25,
+				z: mesh.rotation.z + 0.25,
+				duration: 700,
+				easing: 'easeOutQuad'
+			});
+
+			controls.reset();
 			rolledResult = randInt(1, value);
+			isRolling = false;
+
 			onRollEnd?.();
 		}, 700);
 	}
@@ -237,7 +258,13 @@
 			{rolledResult}
 		</div>
 	{/if}
-	<canvas bind:this={webGl} {width} {height} onmouseup={throwDice}></canvas>
+	<canvas
+		bind:this={webGl}
+		{width}
+		{height}
+		onmousedown={() => (rolledResult = undefined)}
+		onmouseup={throwDice}
+	></canvas>
 </div>
 
 <style lang="scss">
