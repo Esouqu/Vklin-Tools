@@ -56,18 +56,49 @@
 
 <div class="main-page">
 	<div class="middle">
-		<div
-			class="section-wrapper"
-			style="flex-direction: row; align-items: center; justify-content: space-between;"
-		>
-			<h2 style="color: white;">Диапазон</h2>
-			<ButtonSelect
-				options={RARITIES}
-				color={RARITIES[selectedRarity].color}
-				isDisabled={isRollingItems || isRollingKeys}
-				bind:currentOption={selectedRarity}
+		<div class="section-wrapper">
+			<div
+				class="section-wrapper"
+				style="flex-direction: row; align-items: center; justify-content: space-between; margin: 0;"
+			>
+				<h2 style="color: white;">Награда</h2>
+				<ButtonSelect
+					options={RARITIES}
+					color={RARITIES[selectedRarity].color}
+					isDisabled={isRollingItems || isRollingKeys}
+					bind:currentOption={selectedRarity}
+				/>
+			</div>
+			<!-- <h2 style="margin: 0; color: white;">Предмет</h2> -->
+			<Roulette
+				items={transformedItems}
+				dropSoundFile={itemDropSoundFile}
+				onStart={() => {
+					isRollingItems = true;
+					winnerItem = undefined;
+				}}
+				onFinished={(item) => {
+					isRollingItems = false;
+					winnerItem = item;
+				}}
+			/>
+			<Roulette
+				items={transformedKeys}
+				dropSoundFile={keysDropSoundFile}
+				onStart={() => {
+					isRollingKeys = true;
+					winnerKeys = undefined;
+				}}
+				onFinished={(item) => {
+					isRollingKeys = false;
+					winnerKeys = item;
+				}}
 			/>
 		</div>
+		<!-- <div class="section-wrapper"> -->
+		<!-- <h2 style="margin: 0; color: white;">Ключи</h2> -->
+
+		<!-- </div> -->
 		<div class="section-wrapper" style="width: 100%;">
 			<div style="display: flex; align-items: center; justify-content: space-between;">
 				<h2 style="margin: 0; color: white;">Кубик</h2>
@@ -86,36 +117,6 @@
 					onRollEnd={() => (isRollingDice = false)}
 				/>
 			</div>
-		</div>
-		<div class="section-wrapper">
-			<h2 style="margin: 0; color: white;">Предмет</h2>
-			<Roulette
-				items={transformedItems}
-				dropSoundFile={itemDropSoundFile}
-				onStart={() => {
-					isRollingItems = true;
-					winnerItem = undefined;
-				}}
-				onFinished={(item) => {
-					isRollingItems = false;
-					winnerItem = item;
-				}}
-			/>
-		</div>
-		<div class="section-wrapper">
-			<h2 style="margin: 0; color: white;">Ключи</h2>
-			<Roulette
-				items={transformedKeys}
-				dropSoundFile={keysDropSoundFile}
-				onStart={() => {
-					isRollingKeys = true;
-					winnerKeys = undefined;
-				}}
-				onFinished={(item) => {
-					isRollingKeys = false;
-					winnerKeys = item;
-				}}
-			/>
 		</div>
 	</div>
 	<div class="right">
@@ -160,6 +161,8 @@
 		display: grid;
 		grid-template-columns: 0.5fr auto 0.5fr;
 		gap: 20px;
+		margin: 0 auto;
+		max-width: 1920px;
 		height: 100vh;
 	}
 	.middle {

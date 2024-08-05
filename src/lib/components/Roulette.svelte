@@ -30,7 +30,7 @@
 	const startOffset = -20;
 	const animationDuration = dev ? 3000 : 15000;
 	const totalDummyItems = 40;
-	const itemsInView = 5;
+	const itemsInView = 7;
 
 	let openSound: HTMLAudioElement;
 	let rollSound: HTMLAudioElement;
@@ -132,11 +132,12 @@
 	}
 
 	function generateItems(amount: number, generatedWinner?: T) {
+		const winnerItemOffset = 5;
+		const winnerIdx = amount - winnerItemOffset;
 		const takenItems: RouletteItem[] = [];
 
 		for (let i = 0; i < amount; i++) {
 			const randomItem = randomFromArray(items);
-			const winnerIdx = amount - 3;
 			const currentItem = i === winnerIdx && generatedWinner ? generatedWinner : randomItem;
 			const startPosition = i * (itemWidth + itemsGap);
 
@@ -175,6 +176,7 @@
 <style lang="scss">
 	.roulette {
 		position: relative;
+		margin: 0 auto;
 
 		&-pointer {
 			position: absolute;

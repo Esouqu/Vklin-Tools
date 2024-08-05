@@ -1,11 +1,13 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import {
+		AmbientLight,
 		BufferGeometry,
 		Color,
 		DirectionalLight,
 		Mesh,
 		MeshPhongMaterial,
+		MeshToonMaterial,
 		PerspectiveCamera,
 		Scene,
 		Vector3,
@@ -114,6 +116,7 @@
 		const controlsInstance = new OrbitControls(camera, canvas);
 		controlsInstance.enablePan = false;
 		controlsInstance.enableDamping = true;
+		controlsInstance.enableZoom = false;
 		controlsInstance.dampingFactor = 0.03;
 		controlsInstance.rotateSpeed = 0.5;
 
@@ -131,7 +134,7 @@
 
 	function createLight() {
 		const lightInstance = new DirectionalLight('white', 2);
-		lightInstance.position.z = 15;
+		lightInstance.position.z = 30;
 
 		return lightInstance;
 	}
